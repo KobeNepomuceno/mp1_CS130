@@ -198,173 +198,176 @@ public class Main {
 		}
 		return false;
 	}
+	
 	public static void main(String args[]) {
-		System.out.print("Enter function variables: ");
-		Scanner s = new Scanner(System.in);
-		String vars[] = isValidVars(s);
-		numVars = vars.length == 1 ? 0 : vars.length ;
-		
-		System.out.print("Enter minterms: ");		
-		String inputs[] = isValidMinterm(s);
-		String bin[] = new String[inputs.length];
-		
-		//gets binary for each decimal input
-		for(int i = 0; i < inputs.length; i++) {
-			bin[i] = getBinary(inputs[i]);
-		}
-		
-		//left padding with zeroes
-		for(int i = 0; i < bin.length; i++) {
-			bin[i] = normalize(bin[i], vars.length);
-		}
-		s.close();
-		Map<String, String> minterms = new HashMap<String, String>();
-		for(int i = 0; i < inputs.length; i++) {
-			minterms.put(inputs[i], bin[i]);
-		}
-		System.out.println(minterms.toString());
-		Object keys[] = minterms.keySet().toArray();
-		List<Row> rows = new ArrayList<Row>();
-		for(int i = 0; i < keys.length; i++) {
-			int count = 0;
-			String key = keys[i].toString();
-			String value = minterms.get(key);
-			for(int j = 0; j < value.length(); j++) {
-				if(value.charAt(j) == '1') {
-					count++;
-				}
-			}			
-			Row r = new Row(key, value, count, false);
-			rows.add(r);
-		}
-		//Sorts rows according to group
-		Collections.sort(rows, Comparator.comparing(Row::getGroup));
-		for(Row r: rows) {
-			System.out.println(r.getMinterm() + "\t" + r.getBinary() + "\t" + r.getGroup());
-		}
-		int counter = 1;
-		ArrayList<Row> primeImplicants = new ArrayList<>();
-		do {
-			if(rowContainer.size() != 0)
-				removeDuplicate(rowContainer);
-			System.out.println();
+			System.out.print("Enter function variables: ");
+			Scanner s = new Scanner(System.in);
+			String vars[] = isValidVars(s);
+			numVars = vars.length == 1 ? 0 : vars.length ;
 			
-			System.out.println("COMPARISON: " + counter);
-			System.out.println("-------------------------------------------------------");
+			System.out.print("Enter minterms: ");		
+			String inputs[] = isValidMinterm(s);
+			String bin[] = new String[inputs.length];
 			
-			
-			comparison(rows);
-			removeDuplicate(rowContainer);
-			getUnused(rows);			
-					
-			//check for pairs, if pairs found continue loop else stop
-			if(!containsPair(rowContainer)) {
-				noDuplicates = true;
+			//gets binary for each decimal input
+			for(int i = 0; i < inputs.length; i++) {
+				bin[i] = getBinary(inputs[i]);
 			}
 			
-			for(Row r : rowContainer) {
+			//left padding with zeroes
+			for(int i = 0; i < bin.length; i++) {
+				bin[i] = normalize(bin[i], vars.length);
+			}
+			s.close();
+			Map<String, String> minterms = new HashMap<String, String>();
+			for(int i = 0; i < inputs.length; i++) {
+				minterms.put(inputs[i], bin[i]);
+			}
+			System.out.println(minterms.toString());
+			Object keys[] = minterms.keySet().toArray();
+			List<Row> rows = new ArrayList<Row>();
+			for(int i = 0; i < keys.length; i++) {
+				int count = 0;
+				String key = keys[i].toString();
+				String value = minterms.get(key);
+				for(int j = 0; j < value.length(); j++) {
+					if(value.charAt(j) == '1') {
+						count++;
+					}
+				}			
+				Row r = new Row(key, value, count, false);
+				rows.add(r);
+			}
+			//Sorts rows according to group
+			Collections.sort(rows, Comparator.comparing(Row::getGroup));
+			for(Row r: rows) {
 				System.out.println(r.getMinterm() + "\t" + r.getBinary() + "\t" + r.getGroup());
-				if(noDuplicates) {
-					primeImplicants.add(r);
+			}
+			int counter = 1;
+			ArrayList<Row> primeImplicants = new ArrayList<>();
+			do {
+				if(rowContainer.size() != 0)
+					removeDuplicate(rowContainer);
+				System.out.println();
+				
+				System.out.println("COMPARISON: " + counter);
+				System.out.println("-------------------------------------------------------");
+				
+				
+				comparison(rows);
+				removeDuplicate(rowContainer);
+				getUnused(rows);			
+						
+				//check for pairs, if pairs found continue loop else stop
+				if(!containsPair(rowContainer)) {
+					noDuplicates = true;
 				}
-			}	
+				
+				for(Row r : rowContainer) {
+					System.out.println(r.getMinterm() + "\t" + r.getBinary() + "\t" + r.getGroup());
+					if(noDuplicates) {
+						primeImplicants.add(r);
+					}
+				}	
+				
+				//take found pairs as new input then free buffer list for rows
+				rows = new ArrayList<Row>(rowContainer);
+				rowContainer.clear();
+				counter++;			
+				
+			}while(!noDuplicates);
 			
-			//take found pairs as new input then free buffer list for rows
-			rows = new ArrayList<Row>(rowContainer);
-			rowContainer.clear();
-			counter++;			
-			
-		}while(!noDuplicates);
-		
-		//makes prime implicant table
-		while(hasDuplicates(primeImplicants)) {
-			removeDuplicate(primeImplicants);
-		}
-		System.out.println();
-		System.out.println("-------------------------------------------------------");
-		String[][] PItable = new String[primeImplicants.size() + 1][inputs.length + 1];
-		int spacing = primeImplicants.get(0).getMinterm().length() + 5;
-		for(int i = 0; i < PItable.length; i++) {
-			for(int j = 0; j < PItable[0].length; j++) {
-				if(i == 0 && j == 0) {
-					System.out.printf("%-" + spacing + "s" , "");
-				}
-				else if(i == 0) {
-					PItable[i][j] = inputs[j - 1];
-					System.out.printf("%-5s" , PItable[i][j]);
-				}
-				else if(j == 0) {
-					PItable[i][j] = primeImplicants.get(i - 1).getMinterm();
-					System.out.printf("%-" + spacing + "s", PItable[i][j]);
-				}
-				else {
-					PItable[i][j] = isIn(PItable[i][0],(PItable[0][j])) ? "X" : " ";
-					System.out.printf("%-5s", PItable[i][j]);
-				}				
+			//makes prime implicant table
+			while(hasDuplicates(primeImplicants)) {
+				removeDuplicate(primeImplicants);
 			}
 			System.out.println();
-		}
-		StringBuilder output = new StringBuilder();
-		for(int i = 1; i < PItable[0].length; i++) {
-			if(PItable[0][i] != "+" ) {
-				int counter2 = 0;
-				int tracker = 0;
-				for(int j = 1; j < PItable.length; j++) {
-					if(PItable[j][i] == "X") {
-						counter2++;
-						tracker = j;					
+			System.out.println("PRIME IMPLICANT TABLE");
+			System.out.println("-------------------------------------------------------");
+			String[][] PItable = new String[primeImplicants.size() + 1][inputs.length + 1];
+			int spacing = primeImplicants.get(0).getMinterm().length() + 5;
+			for(int i = 0; i < PItable.length; i++) {
+				for(int j = 0; j < PItable[0].length; j++) {
+					if(i == 0 && j == 0) {
+						System.out.printf("%-" + spacing + "s" , "");
 					}
+					else if(i == 0) {
+						PItable[i][j] = inputs[j - 1];
+						System.out.printf("%-5s" , PItable[i][j]);
+					}
+					else if(j == 0) {
+						PItable[i][j] = primeImplicants.get(i - 1).getMinterm();
+						System.out.printf("%-" + spacing + "s", PItable[i][j]);
+					}
+					else {
+						PItable[i][j] = isIn(PItable[i][0],(PItable[0][j])) ? "X" : " ";
+						System.out.printf("%-5s", PItable[i][j]);
+					}				
 				}
-				if(counter2 == 1) {
-					String PI = PItable[tracker][0];
-					String PIbin = primeImplicants.get(tracker - 1).getBinary();
-					output.append(toTerm(PIbin, vars)).append("+");
-					for(int j = 1; j < PItable[0].length; j++) {
-						if(isIn(PI, PItable[0][j])) {
-							PItable[0][j] = "+";
+				System.out.println();
+			}
+			StringBuilder output = new StringBuilder();
+			for(int i = 1; i < PItable[0].length; i++) {
+				if(PItable[0][i] != "+" ) {
+					int counter2 = 0;
+					int tracker = 0;
+					for(int j = 1; j < PItable.length; j++) {
+						if(PItable[j][i] == "X") {
+							counter2++;
+							tracker = j;					
 						}
 					}
-					PItable[tracker][0] = "+";
-				}				
+					if(counter2 == 1) {
+						String PI = PItable[tracker][0];
+						String PIbin = primeImplicants.get(tracker - 1).getBinary();
+						output.append(toTerm(PIbin, vars)).append("+");
+						for(int j = 1; j < PItable[0].length; j++) {
+							if(isIn(PI, PItable[0][j])) {
+								PItable[0][j] = "+";
+							}
+						}
+						PItable[tracker][0] = "+";
+					}				
+				}	
+			}
+			ArrayList<String> remaining = new ArrayList<>();
+			for(int i = 1; i < PItable[0].length; i++) {	
+				if(PItable[0][i] != "+" ) {
+					remaining.add(PItable[0][i]);
+				}
 			}	
-		}
-		ArrayList<String> remaining = new ArrayList<>();
-		for(int i = 1; i < PItable[0].length; i++) {	
-			if(PItable[0][i] != "+" ) {
-				remaining.add(PItable[0][i]);
-			}
-		}	
-		while(remaining.size() != 0) {
-			String PIbin = "";
-			int tracker = 0;
-			for(int i = 1; i < PItable.length; i++) {
-				String temp = PItable[i][0];
-				if(temp != "+" ) {
-					int counter3 = 0;
-					int current = 0;
-					for(int j = 0; j < remaining.size(); j++) {
-						if(isIn(temp, remaining.get(j))) {
-							counter3++;
+			while(remaining.size() != 0) {
+				String PIbin = "";
+				int tracker = 0;
+				for(int i = 1; i < PItable.length; i++) {
+					String temp = PItable[i][0];
+					if(temp != "+" ) {
+						int counter3 = 0;
+						int current = 0;
+						for(int j = 0; j < remaining.size(); j++) {
+							if(isIn(temp, remaining.get(j))) {
+								counter3++;
+							}
+						}
+						if(counter3 > current) {
+							current = counter3;
+							PIbin = primeImplicants.get(i- 1).getBinary();
+							tracker = i;
 						}
 					}
-					if(counter3 > current) {
-						current = counter3;
-						PIbin = primeImplicants.get(i- 1).getBinary();
-						tracker = i;
+				}
+				output.append(toTerm(PIbin, vars)).append("+");			
+				for(int j = remaining.size() - 1; j >= 0 ; j--) {
+					if(isIn(PItable[tracker][0], remaining.get(j))) {
+						remaining.remove(j);
 					}
 				}
+				PItable[tracker][0] = "+";			
 			}
-			output.append(toTerm(PIbin, vars)).append("+");			
-			for(int j = remaining.size() - 1; j >= 0 ; j--) {
-				if(isIn(PItable[tracker][0], remaining.get(j))) {
-					remaining.remove(j);
-				}
+				System.out.println();
+				System.out.println("-------------------------------------------------------");
+				String answer = (output.length() == 1 && !Character.isAlphabetic(output.charAt(0))) ? "1" : output.substring(0, output.length() - 1); 
+				System.out.println("Output: " + answer);
 			}
-			PItable[tracker][0] = "+";			
-		}
-		System.out.println();
-		System.out.println("-------------------------------------------------------");
-		String answer = (output.length() == 1 && !Character.isAlphabetic(output.charAt(0))) ? "1" : output.substring(0, output.length() - 1); 
-		System.out.println("Output: " + answer);
-	}
+		
 }
