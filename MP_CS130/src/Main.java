@@ -53,15 +53,6 @@ public class Main {
 		}
 	}
 	
-	public static int getLongest(String s[]) {
-		int size = 0;
-		for(int i = 0; i < s.length; i++) {
-			if(s[i].length() > size)
-				size = s[i].length();
-		}
-		return size;
-	}
-	
 	public static String[] isValidVars(Scanner sc) {
 		String content = sc.nextLine();
 		String inputs[] = content.split(" ");
@@ -166,13 +157,14 @@ public class Main {
 	public static String[] isValidMinterm(Scanner sc) {
 		String content = sc.nextLine();		
 		String inputs[] = content.split(" ");
+		int max = (int) (Math.pow(2, numVars) - 1);
 		for(int i = 0; i < inputs.length; i++) {
 			if(!isNumber(inputs[i])) {
 				System.out.print("Please enter numerical values only (space separated): ");
 				return isValidMinterm(sc);
 			}
-			else if(Integer.parseInt(inputs[i]) > Math.pow(2, numVars)) {
-				System.out.print("Minterm " + inputs[i] + " exceeds possible minterms, please enter new input: " );
+			else if(Integer.parseInt(inputs[i]) < 0 || Integer.parseInt(inputs[i]) > max) {
+				System.out.print("Minterm values must be within the range 0 to " + max +" only, please enter new input: " );
 				return isValidMinterm(sc);
 			}
 		}
@@ -289,7 +281,7 @@ public class Main {
 			removeDuplicate(primeImplicants);
 		}
 		System.out.println();
-		
+		System.out.println("-------------------------------------------------------");
 		String[][] PItable = new String[primeImplicants.size() + 1][inputs.length + 1];
 		int spacing = primeImplicants.get(0).getMinterm().length() + 5;
 		for(int i = 0; i < PItable.length; i++) {
@@ -312,9 +304,7 @@ public class Main {
 			}
 			System.out.println();
 		}
-		
 		StringBuilder output = new StringBuilder();
-		ArrayList<String> remaining = new ArrayList<>();
 		for(int i = 1; i < PItable[0].length; i++) {
 			if(PItable[0][i] != "+" ) {
 				int counter2 = 0;
@@ -327,7 +317,6 @@ public class Main {
 				}
 				if(counter2 == 1) {
 					String PI = PItable[tracker][0];
-					//System.out.println("PI: " + PI + " of size " + PI.length());
 					String PIbin = primeImplicants.get(tracker - 1).getBinary();
 					output.append(toTerm(PIbin, vars)).append("+");
 					for(int j = 1; j < PItable[0].length; j++) {
@@ -336,12 +325,15 @@ public class Main {
 						}
 					}
 					PItable[tracker][0] = "+";
-				}
-				else {
-					remaining.add(PItable[0][i]);
-				}
+				}				
 			}	
 		}
+		ArrayList<String> remaining = new ArrayList<>();
+		for(int i = 1; i < PItable[0].length; i++) {	
+			if(PItable[0][i] != "+" ) {
+				remaining.add(PItable[0][i]);
+			}
+		}	
 		while(remaining.size() != 0) {
 			String PIbin = "";
 			int tracker = 0;
@@ -364,14 +356,15 @@ public class Main {
 			}
 			output.append(toTerm(PIbin, vars)).append("+");			
 			for(int j = remaining.size() - 1; j >= 0 ; j--) {
-				//System.out.println("Params for isIn: " + PItable[tracker][0] + " & " + remaining.get(j));
 				if(isIn(PItable[tracker][0], remaining.get(j))) {
 					remaining.remove(j);
 				}
 			}
 			PItable[tracker][0] = "+";			
 		}
+		System.out.println();
 		System.out.println("-------------------------------------------------------");
-		System.out.println("Output: " + output.substring(0, output.length() - 1));
+		String answer = (output.length() == 1 && !Character.isAlphabetic(output.charAt(0))) ? "1" : output.substring(0, output.length() - 1); 
+		System.out.println("Output: " + answer);
 	}
 }
