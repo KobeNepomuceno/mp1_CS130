@@ -5,12 +5,13 @@ public class Main {
 	private static boolean noDuplicates = false;
 	private static List<Row> rowContainer = new ArrayList<Row>();
 	private static String mintermResult = "";
-	public static String getBinary(String s) {
+	
+	private static String getBinary(String s) {
 		int i = Integer.parseInt(s);
 		return Integer.toBinaryString(i);
 	}
 	
-	public static String normalize(String s, int length) {
+	private static String normalize(String s, int length) {
 		if(s.length() < length) {
 			do {
 				s = "0" + s;
@@ -53,7 +54,7 @@ public class Main {
 		}
 	}
 	
-	public static String[] isValidVars(Scanner sc) {
+	private static String[] isValidVars(Scanner sc) {
 		String content = sc.nextLine();
 		String inputs[] = content.split(" ");
 		for(int i = 0; i < inputs.length; i++) {
@@ -154,7 +155,7 @@ public class Main {
 		return dupli;
 	}
 	
-	public static String[] isValidMinterm(Scanner sc) {
+	private static String[] isValidMinterm(Scanner sc) {
 		String content = sc.nextLine();		
 		String inputs[] = content.split(" ");
 		int max = (int) (Math.pow(2, numVars) - 1);
